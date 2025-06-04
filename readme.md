@@ -40,6 +40,6 @@ Este projeto é a base para funcionalidades futuras como controle de manutençã
 1. Clone o repositório:
 
 ```bash
-git clone https://github.com/victors21dev/listagemPrinterVS.git
+git clone https://github.com/victors21dev/listagemPrinter.git
 cd listagemPrinter
 ```
