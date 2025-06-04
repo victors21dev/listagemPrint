@@ -1,20 +1,33 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+// App.tsx
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import LoginScreen from "./app/pages/login/loginScreen";
+import RegisterScreen from "./app/pages/register/registerScreen";
+import TabRoutes from "./app/routes/TabRoutes";
+import { CadastroProvider } from "./app/context/cadastroContext";
+
+export type RootStackParamList = {
+  Login: undefined;
+  Registro: undefined;
+  Tabs: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <CadastroProvider>
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName="Login"
+          screenOptions={{ headerShown: false }}
+        >
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Registro" component={RegisterScreen} />
+          <Stack.Screen name="Tabs" component={TabRoutes} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </CadastroProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
