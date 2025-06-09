@@ -6,8 +6,12 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RootStackParamList } from "../../../App";
 export default function RegisterScreen() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Cadastro</Text>
@@ -27,6 +31,15 @@ export default function RegisterScreen() {
 
       <TouchableOpacity style={styles.button}>
         <Text style={styles.buttonText}>Salvar Registro</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.buttonOut}
+        onPress={() => {
+          navigation.replace("Login");
+        }}
+      >
+        <Text style={styles.buttonText}>Voltar</Text>
       </TouchableOpacity>
     </View>
   );
@@ -64,5 +77,12 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  buttonOut: {
+    backgroundColor: "#d30000",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 10,
   },
 });

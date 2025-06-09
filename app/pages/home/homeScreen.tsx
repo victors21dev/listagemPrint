@@ -241,19 +241,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 40,
     marginBottom: 20,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: "#005CB3",
   },
   title: {
     fontWeight: "bold",
     fontSize: 18,
-    color: "#fff",
+    color: "#000",
   },
   text_users: {
-    color: "#fff",
+    color: "#000",
     fontSize: 16,
   },
   card_totalImpressoras: {

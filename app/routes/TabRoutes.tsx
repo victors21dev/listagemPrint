@@ -17,7 +17,7 @@ export default function TabRoutes() {
         tabBarInactiveTintColor: "#A8A8A8",
         tabBarLabelStyle: { fontSize: 12 },
         tabBarStyle: {
-          height: 60,
+          height: 80,
           paddingBottom: 6,
           paddingTop: 5,
         },

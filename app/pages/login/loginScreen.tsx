@@ -14,34 +14,32 @@ import { auth } from "../../firebase/config";
 import { signInWithEmailAndPassword } from "firebase/auth";
 
 export default function LoginScreen() {
-  console.log(auth);
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
     if (!emailRegex.test(email)) {
-      Alert.alert(
-        "Email inválido",
-        "Por favor, verifique um email válido e tente novamente"
-      );
+      Alert.alert("Email inválido", "Por favor, verifique um email válido.");
       return;
     }
 
-    signInWithEmailAndPassword(auth, email, password);
-    const user = auth.currentUser;
-    if (user) {
-      Alert.alert("Login com sucesso!", "Você fez login com sucesso");
-      navigation.replace("Tabs");
-    }
-    {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      const user = auth.currentUser;
+      if (user) {
+        Alert.alert("Login com sucesso!", "Você fez login com sucesso");
+        navigation.replace("Tabs");
+      }
+    } catch (error) {
       Alert.alert(
         "Login falhou!",
-        "Por favor, verifique as informações de login e tente novamente."
+        "Verifique suas credenciais e tente novamente."
       );
+      console.error(error);
     }
   };
 
