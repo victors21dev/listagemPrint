@@ -1,16 +1,42 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp } from "firebase/app";
+import {
+  getAuth,
+  initializeAuth,
+  type Auth,
+} from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getReactNativePersistence } from "../../node_modules/firebase/auth/reactNativeAsyncStorage";
+import { getFirestore } from "firebase/firestore";
+
+import {
+  APIKEY,
+  AUTHDOMAIN,
+  PROJECTID,
+  STORAGEBUCKET,
+  MESSAGINGSENDERID,
+  APPID,
+} from "@env";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCjFFFhlFlI380U6uVugcjpT-KR49uN6bU",
-  authDomain: "listagemprinter.firebaseapp.com",
-  projectId: "listagemprinter",
-  storageBucket: "listagemprinter.firebasestorage.app",
-  messagingSenderId: "362518936463",
-  appId: "1:362518936463:web:dc1763f78fc7d1899129fa",
+  apiKey: APIKEY,
+  authDomain: AUTHDOMAIN,
+  projectId: PROJECTID,
+  storageBucket: STORAGEBUCKET,
+  messagingSenderId: MESSAGINGSENDERID,
+  appId: APPID,
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
 
-export { auth };
+let auth: Auth;
+try {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+} catch (e) {
+  auth = getAuth(app);
+}
+
+const db = getFirestore(app);
+
+export { auth, db };

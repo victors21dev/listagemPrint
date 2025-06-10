@@ -1,35 +1,76 @@
 import React from "react";
+import { useState } from "react";
+
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert
 } from "react-native";
+
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../../App";
+import { auth } from "../../firebase/config";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+
 export default function RegisterScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
+
+  const handleRegister = async () => {
+    if (!email || !senha || !confirmarSenha) {
+      Alert.alert("Registro","Preencha todos os campos");
+      return;
+    }
+
+    if (senha !== confirmarSenha) {
+      Alert.alert("Problema na senha","As senhas não coincidem");
+      return;
+    }
+
+    try {
+      await createUserWithEmailAndPassword(auth, email, senha);
+      Alert.alert("Tudo certo!","Cadastro realizado com sucesso!");
+      navigation.replace("Login");
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert("Algo deu errado!","Erro ao cadastrar: " + error.message);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Cadastro</Text>
-
-      <TextInput style={styles.input} placeholder="Nome completo" />
       <TextInput
         style={styles.input}
         placeholder="Email"
         keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail}
       />
-      <TextInput style={styles.input} placeholder="Senha" secureTextEntry />
+      <TextInput
+        style={styles.input}
+        placeholder="Senha"
+        secureTextEntry
+        value={senha}
+        onChangeText={setSenha}
+      />
       <TextInput
         style={styles.input}
         placeholder="Repetir senha"
         secureTextEntry
+        value={confirmarSenha}
+        onChangeText={setConfirmarSenha}
       />
 
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={handleRegister}>
         <Text style={styles.buttonText}>Salvar Registro</Text>
       </TouchableOpacity>
 

@@ -3,25 +3,58 @@ import { LogOut } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../../App"; // ajuste o caminho conforme necessário
+import { useUser } from "../../context/userContext";
+import { useState, useEffect } from "react";
+import { auth } from "../../firebase/config";
+import { signOut } from "firebase/auth";
+
+function gerarIniciais(nomeCompleto: string): string {
+  const partes = nomeCompleto.trim().split(" ");
+  if (partes.length === 0) return "";
+
+  const primeiraLetra = partes[0][0];
+  const ultimaLetra = partes[partes.length - 1][0];
+
+  return (primeiraLetra + ultimaLetra).toUpperCase();
+}
 
 export default function UserScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const handleLogout = () => {
-    // Aqui você pode adicionar limpeza de dados (ex: AsyncStorage)
-    navigation.replace("Login"); // substitui a stack atual e evita voltar com o botão de hardware
+  // Dados do usuário
+  const { user, loading } = useUser();
+
+  if (loading) return <Text>Carregando...</Text>;
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigation.replace("Login");
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    }
   };
+
+  const [initialUser, setInitialUser] = useState("");
+  const nameUser = user?.nome ?? "";
+  
+  useEffect(() => {
+    if (nameUser) {
+      const iniciais = gerarIniciais(nameUser);
+      setInitialUser(iniciais);
+    }
+  }, [nameUser]);
 
   return (
     <View style={styles.container}>
       <View style={styles.profileContainer}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>VS</Text>
+          <Text style={styles.avatarText}>{initialUser}</Text>
         </View>
         <View style={styles.userInfo}>
-          <Text style={styles.userName}>Victor Santos</Text>
-          <Text style={styles.userEmail}>santos.victors2000@gmail.com</Text>
+          <Text style={styles.userName}>{user?.nome}</Text>
+          <Text style={styles.userEmail}>{user?.email}</Text>
         </View>
       </View>
 

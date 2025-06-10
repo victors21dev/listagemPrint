@@ -11,7 +11,16 @@ import {
 import { useCadastro } from "../../context/cadastroContext";
 
 export default function CadastroScreen() {
-  const { adicionarModelo, adicionarSetor, modelos, setores } = useCadastro();
+  const {
+    modelos,
+    setores,
+    adicionarModelo,
+    adicionarSetor,
+    atualizarModelo,
+    atualizarSetor,
+    removerModelo,
+    removerSetor,
+  } = useCadastro();
 
   const [modo, setModo] = useState<"impressora" | "setor">("impressora");
   const [modalVisible, setModalVisible] = useState(false);
@@ -21,6 +30,7 @@ export default function CadastroScreen() {
   const [editandoIndex, setEditandoIndex] = useState<number | null>(null);
 
   const abrirModal = () => setModalVisible(true);
+
   const fecharModal = () => {
     setModalVisible(false);
     setNovaMarca("");
@@ -34,9 +44,7 @@ export default function CadastroScreen() {
       if (novaMarca && novoModelo) {
         const novoItem = { marca: novaMarca, modelo: novoModelo };
         if (editandoIndex !== null) {
-          const atualizados = [...modelos];
-          atualizados[editandoIndex] = novoItem;
-          // substitui os dados
+          atualizarModelo(editandoIndex, novoItem);
         } else {
           adicionarModelo(novoItem);
         }
@@ -44,9 +52,7 @@ export default function CadastroScreen() {
     } else {
       if (novoSetor) {
         if (editandoIndex !== null) {
-          const atualizados = [...setores];
-          atualizados[editandoIndex] = novoSetor;
-          // substitui os dados
+          atualizarSetor(editandoIndex, novoSetor);
         } else {
           adicionarSetor(novoSetor);
         }
@@ -62,26 +68,22 @@ export default function CadastroScreen() {
       setNovaMarca(item.marca);
       setNovoModelo(item.modelo);
     } else {
-      setNovoSetor(setores[index]);
+      const item = setores[index];
+      setNovoSetor(item.setor);
     }
     setModalVisible(true);
   };
 
   const removerItem = (index: number) => {
     if (modo === "impressora") {
-      const atualizados = [...modelos];
-      atualizados.splice(index, 1);
-      // remover do estado/contexto se necessário
+      removerModelo(index);
     } else {
-      const atualizados = [...setores];
-      atualizados.splice(index, 1);
-      // remover do estado/contexto se necessário
+      removerSetor(index);
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={[
@@ -90,7 +92,7 @@ export default function CadastroScreen() {
           ]}
           onPress={() => setModo("impressora")}
         >
-          <Text style={styles.tabText}>Impressoras</Text>
+          <Text style={styles.tabText}>Modelos</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tabButton, modo === "setor" && styles.tabSelected]}
@@ -100,7 +102,6 @@ export default function CadastroScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Botão Adicionar */}
       <TouchableOpacity style={styles.addButton} onPress={abrirModal}>
         <Text style={styles.addButtonText}>+ Adicionar</Text>
       </TouchableOpacity>
@@ -109,9 +110,9 @@ export default function CadastroScreen() {
         data={
           modo === "impressora"
             ? modelos.map((m) => `${m.marca} - ${m.modelo}`)
-            : setores
+            : setores.map((s) => s.setor)
         }
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(_, index) => index.toString()}
         renderItem={({ item, index }) => (
           <View style={styles.item}>
             <Text style={styles.itemText}>{item}</Text>
@@ -128,12 +129,13 @@ export default function CadastroScreen() {
         contentContainerStyle={{ paddingBottom: 20 }}
       />
 
-      {/* Modal */}
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
-              {modo === "impressora" ? "Nova Impressora" : "Novo Setor"}
+              {modo === "impressora"
+                ? "Novo modelo de Impressora"
+                : "Novo Setor"}
             </Text>
 
             {modo === "impressora" ? (
@@ -142,6 +144,7 @@ export default function CadastroScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Digite a marca"
+                  placeholderTextColor="#999"
                   value={novaMarca}
                   onChangeText={setNovaMarca}
                 />
@@ -149,6 +152,7 @@ export default function CadastroScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Digite o modelo"
+                  placeholderTextColor="#999"
                   value={novoModelo}
                   onChangeText={setNovoModelo}
                 />
@@ -159,6 +163,7 @@ export default function CadastroScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Digite o setor"
+                  placeholderTextColor="#999"
                   value={novoSetor}
                   onChangeText={setNovoSetor}
                 />
@@ -201,7 +206,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: "transparent",
   },
-  tabSelected: { borderBottomColor: "#005CB3" },
+  tabSelected: {
+    borderBottomColor: "#005CB3"
+  },
   tabText: { fontWeight: "bold", color: "#005CB3" },
   addButton: {
     backgroundColor: "#005CB3",
@@ -210,7 +217,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  addButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  addButtonText: { 
+    color: "#fff",
+    fontWeight: "bold", 
+    fontSize: 16 
+  },
   item: {
     padding: 14,
     borderBottomColor: "#ddd",
@@ -219,15 +230,27 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  itemText: { fontSize: 14, flex: 1 },
-  itemActions: { flexDirection: "row", gap: 12 },
-  editText: { color: "#005CB3", fontWeight: "bold" },
-  deleteText: { color: "#FA2A2A", fontWeight: "bold" },
+  itemText: { 
+    fontSize: 14, 
+    flex: 1 
+  },
+  itemActions: { 
+    flexDirection: "row",
+    gap: 12 
+  },
+  editText: { 
+    color: "#005CB3", 
+    fontWeight: "bold" 
+  },
+  deleteText: { 
+    color: "#FA2A2A",
+    fontWeight: "bold" 
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
     alignItems: "center",
+    paddingTop:"50%",
   },
   modalContent: {
     backgroundColor: "#fff",
@@ -235,8 +258,14 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
   },
-  modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 12 },
-  label: { marginTop: 10, fontWeight: "bold" },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
+  },
+  label: { marginTop: 10,
+    fontWeight: "bold"
+  },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",

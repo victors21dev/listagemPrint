@@ -7,11 +7,14 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../../App";
 import { auth } from "../../firebase/config";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../firebase/config";
 
 export default function LoginScreen() {
   const navigation =
@@ -26,20 +29,28 @@ export default function LoginScreen() {
       Alert.alert("Email inválido", "Por favor, verifique um email válido.");
       return;
     }
-
+  
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      const user = auth.currentUser;
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+  
       if (user) {
-        Alert.alert("Login com sucesso!", "Você fez login com sucesso");
-        navigation.replace("Tabs");
+        // Verifica se existe documento na coleção "users"
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+  
+        if (userSnap.exists()) {
+          await AsyncStorage.setItem("user", JSON.stringify(user));
+          Alert.alert("Login com sucesso!", "Você fez login com sucesso.");
+          navigation.replace("Tabs");
+        } else {
+          // Documento não existe, redireciona para criação de perfil
+          navigation.replace("CompleteProfile");
+        }
       }
     } catch (error) {
-      Alert.alert(
-        "Login falhou!",
-        "Verifique suas credenciais e tente novamente."
-      );
       console.error(error);
+      Alert.alert("Login falhou!", "Verifique suas credenciais e tente novamente.");
     }
   };
 
@@ -52,6 +63,7 @@ export default function LoginScreen() {
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
+        autoCapitalize="none"
       />
       <TextInput
         style={styles.input}
@@ -65,7 +77,7 @@ export default function LoginScreen() {
         <Text style={styles.forgotText}>Esqueceu a senha?</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => handleLogin()} style={styles.button}>
+      <TouchableOpacity onPress={handleLogin} style={styles.button}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useUser } from "../../context/userContext";
 import {
   View,
   Text,
@@ -15,12 +16,16 @@ import {
   Pencil,
   CirclePlus,
   Share2,
+  LoaderCircle,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { Picker } from "@react-native-picker/picker";
 import { useCadastro } from "../../context/cadastroContext";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
+import RNPickerSelect from "react-native-picker-select";
 
 type TabParamList = {
   Home: undefined;
@@ -38,27 +43,43 @@ interface Impressora {
 
 export default function HomeScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const { user, loading, refreshUser } = useUser();
   const { modelos, setores } = useCadastro();
-
   const [impressoras, setImpressoras] = useState<Impressora[]>([]);
   const [totalImpressoras, setTotalImpressoras] = useState<number>(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
-
   const [modelo, setModelo] = useState("");
   const [marca, setMarca] = useState("");
-  const [setor, setSetor] = useState("");
+  const [setor, setSetor] = useState<string>("");
+  const modeloRef = useRef<any>(null);
+  const setorRef = useRef<any>(null);
 
   useEffect(() => {
-    if (modelos.length > 0) {
+    if (!loading && modelos.length > 0) {
       const primeiroModelo = modelos[0];
       setModelo(`${primeiroModelo.marca} - ${primeiroModelo.modelo}`);
       setMarca(primeiroModelo.marca);
     }
-    if (setores.length > 0) {
-      setSetor(setores[0]);
+    if (!loading && setores.length > 0) {
+      setSetor(setores[0].setor);
     }
-  }, [modelos, setores]);
+  }, [loading, modelos, setores]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshUser(); // carrega os dados sempre que entra na Home
+    }, [])
+  );
+
+  if (loading)
+    return (
+      <View style={styles.contentLoading}>
+        <Text style={styles.contentLoadingText}>
+          <LoaderCircle /> Carregando...
+        </Text>
+      </View>
+    );
 
   const gerarId = () => Math.floor(1000 + Math.random() * 9000).toString();
 
@@ -134,7 +155,7 @@ export default function HomeScreen() {
       <View style={styles.contentNav}>
         <Text style={styles.title}>Dashboard</Text>
         <Pressable onPress={() => navigation.navigate("Perfil")}>
-          <Text style={styles.text_users}>Victor Santos</Text>
+          <Text style={styles.text_users}>{user?.nome}</Text>
         </Pressable>
       </View>
 
@@ -169,7 +190,6 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* Modal de Adição / Edição */}
       <Modal
         visible={modalVisible}
         animationType="slide"
@@ -180,33 +200,54 @@ export default function HomeScreen() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Impressora</Text>
 
+            {/* MODELO */}
             <Text style={styles.label}>Modelo:</Text>
-            <Picker
-              selectedValue={modelo}
-              onValueChange={(value) => {
-                setModelo(value);
-                const match = modelos.find(
-                  (m) => `${m.marca} - ${m.modelo}` === value
-                );
-                if (match) setMarca(match.marca);
-              }}
+            <TouchableOpacity
+              style={teste.testando}
+              onPress={() => modeloRef.current?.togglePicker()}
             >
-              {modelos.map((m, i) => (
-                <Picker.Item
-                  key={i}
-                  label={`${m.marca} - ${m.modelo}`}
-                  value={`${m.marca} - ${m.modelo}`}
+              <View>
+                <RNPickerSelect
+                  ref={modeloRef}
+                  placeholder={{ label: "Selecione um modelo", value: null }}
+                  value={modelo}
+                  onValueChange={(value) => {
+                    setModelo(value);
+                    const match = modelos.find(
+                      (m) => `${m.marca} - ${m.modelo}` === value
+                    );
+                    if (match) setMarca(match.marca);
+                  }}
+                  items={modelos.map((m) => ({
+                    label: `${m.marca} - ${m.modelo}`,
+                    value: `${m.marca} - ${m.modelo}`,
+                  }))}
+                  useNativeAndroidPickerStyle={false}
+                  style={pickerSelectStyles}
                 />
-              ))}
-            </Picker>
+              </View>
+            </TouchableOpacity>
 
+            {/* SETOR */}
             <Text style={styles.label}>Setor:</Text>
-            <Picker selectedValue={setor} onValueChange={setSetor}>
-              {setores.map((s, i) => (
-                <Picker.Item key={i} label={s} value={s} />
-              ))}
-            </Picker>
+            <TouchableOpacity onPress={() => setorRef.current?.togglePicker()}>
+              <View>
+                <RNPickerSelect
+                  ref={setorRef}
+                  placeholder={{ label: "Selecione o setor", value: null }}
+                  value={setor}
+                  onValueChange={setSetor}
+                  items={setores.map((s) => ({
+                    label: s.setor,
+                    value: s.setor,
+                  }))}
+                  useNativeAndroidPickerStyle={false}
+                  style={pickerSelectStyles}
+                />
+              </View>
+            </TouchableOpacity>
 
+            {/* BOTÕES */}
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.cancelButton}
@@ -352,5 +393,65 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+  contentLoading: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  contentLoadingText: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 6,
+    marginTop: 6,
+    marginBottom: 16,
+    overflow: "hidden",
+  },
+
+  picker: {
+    height: 50,
+    width: "100%",
+  },
+});
+
+const pickerSelectStyles = StyleSheet.create({
+  inputIOS: {
+    fontSize: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 6,
+    color: "#000",
+    backgroundColor: "#fff",
+    paddingRight: 30, // espaço para o ícone ▼
+  },
+  inputAndroid: {
+    fontSize: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 6,
+    color: "#000",
+    backgroundColor: "#fff",
+    paddingRight: 30,
+  },
+  iconContainer: {
+    top: 10,
+    right: 12,
+  },
+});
+
+const teste = StyleSheet.create({
+  testando: {
+    backgroundColor: "#000",
+    padding: 40,
   },
 });
