@@ -29,16 +29,20 @@ export default function LoginScreen() {
       Alert.alert("Email inválido", "Por favor, verifique um email válido.");
       return;
     }
-  
+
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
-  
+
       if (user) {
         // Verifica se existe documento na coleção "users"
         const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
-  
+
         if (userSnap.exists()) {
           await AsyncStorage.setItem("user", JSON.stringify(user));
           Alert.alert("Login com sucesso!", "Você fez login com sucesso.");
@@ -50,7 +54,10 @@ export default function LoginScreen() {
       }
     } catch (error) {
       console.error(error);
-      Alert.alert("Login falhou!", "Verifique suas credenciais e tente novamente.");
+      Alert.alert(
+        "Login falhou!",
+        "Verifique suas credenciais e tente novamente."
+      );
     }
   };
 
