@@ -35,6 +35,10 @@ Este projeto é a base para funcionalidades futuras como controle de manutençã
 - Android Studio (para emulador)
 - Expo CLI
 
+### 📷 Captura de Tela
+
+![Home do ListagemPrint](./assets/listagemprint.png)
+
 ### Passos
 
 1. Clone o repositório:
